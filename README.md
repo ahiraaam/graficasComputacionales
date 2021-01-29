@@ -13,7 +13,7 @@
 
 Durante esta entrega se añadieron los modelos necesarios para nuestra escena:
 
-- Un puente sacado de sketchfab
+- Un puente sacado de sketchfab: https://sketchfab.com/3d-models/bridge-9328bbfc04a84202a6a97bd59408473a
 - Esferas como piñatas
 - CircleBuffer para simulación de pétalos
 
