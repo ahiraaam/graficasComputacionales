@@ -48,6 +48,7 @@
       var controls = new OrbitControls(camara, renderer.domElement);
 
       //MODELO BIEN
+      //scene.gltf es el puente
       var textureLoader = new THREE.TextureLoader();
 
       var loader = new THREE.GLTFLoader();
@@ -77,7 +78,7 @@
       //crear materiales
       var cubeMaterials = [
         new THREE.MeshLambertMaterial({
-          map: new THREE.TextureLoader().load("img/pinata1.jpg"),
+          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
           side: THREE.DoubleSide,
         }), //RIGHT SIDE
         new THREE.MeshPhongMaterial({
@@ -89,7 +90,7 @@
           side: THREE.DoubleSide,
         }), //TOP SIDE
         new THREE.MeshPhongMaterial({
-          map: new THREE.TextureLoader().load("img/pinata1.jpg"),
+          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
           side: THREE.DoubleSide,
         }), //BOTTOM SIDE
         new THREE.MeshLambertMaterial({
@@ -110,6 +111,36 @@
       });*/
       var cube = new THREE.Mesh(geometry, material);
       scene.add(cube);
+
+      const radius = 5.1 * 15;
+      const segments = 100;
+      const thetaStart = Math.PI * 1.2;
+      const thetaLength = Math.PI * 0.20;
+      const petalgeometry = new THREE.CircleBufferGeometry(
+      radius, segments, thetaStart, thetaLength);
+      const petalmaterial = new THREE.MeshBasicMaterial({color: "orange", wireframe:false});
+      const petal = new THREE.Mesh(petalgeometry, petalmaterial);
+      petal.position.x = petal.position.x + 500;
+      petal.position.y = petal.position.y +300;
+      scene.add(petal)
+
+      const petal2 = new THREE.Mesh(petalgeometry, petalmaterial);
+      const petal3 = new THREE.Mesh(petalgeometry, petalmaterial);
+      const petal4 = new THREE.Mesh(petalgeometry, petalmaterial);
+      const petal5 = new THREE.Mesh(petalgeometry, petalmaterial);
+      const petal6 = new THREE.Mesh(petalgeometry, petalmaterial);
+
+      petal2.position.set(petal.position.x-300,petal.position.y + 100,petal.position.z+200);
+      petal3.position.set(petal.position.x-600,petal.position.y - 50,petal.position.z-200);
+      petal4.position.set(petal.position.x-800,petal.position.y + 125,petal.position.z);
+      petal5.position.set(petal.position.x-750,petal.position.y -30,petal.position.z);
+      petal6.position.set(petal.position.x-950,petal.position.y + 80,petal.position.z);
+
+      scene.add(petal2);
+      scene.add(petal3);
+      scene.add(petal4);
+      scene.add(petal5);
+      scene.add(petal6);
 
       //LIGHT
       var ambientLight = new THREE.AmbientLight(0xffffff, 1);
