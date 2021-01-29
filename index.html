@@ -111,6 +111,65 @@
       });*/
       var cube = new THREE.Mesh(geometry, material);
       scene.add(cube);
+      //PIÑATA 1
+      const geometry2 = new THREE.SphereGeometry(5, 32, 32);
+      var material = new THREE.MeshLambertMaterial({
+        map: new THREE.TextureLoader().load("img/pinata4.jpg"),
+        side: THREE.DoubleSide,
+      });
+      const sphere = new THREE.Mesh(geometry2, material);
+      sphere.position.x = 10;
+      sphere.position.y = 500;
+      sphere.scale.set(10, 10, 10);
+      scene.add(sphere);
+
+      //PIÑATA 2
+      const sphere1 = new THREE.Mesh(geometry2, material);
+      sphere1.position.x = 300;
+      sphere1.position.y = 500;
+      sphere1.position.z = 500;
+      sphere1.scale.set(10, 10, 10);
+      scene.add(sphere1);
+
+      //PIÑATA 3
+      const sphere2 = new THREE.Mesh(geometry2, material);
+      sphere2.position.x = -300;
+      sphere2.position.y = 500;
+      sphere2.position.z = -500;
+      sphere2.scale.set(10, 10, 10);
+      scene.add(sphere2);
+
+      //PIÑATA 4
+      const sphere3 = new THREE.Mesh(geometry2, material);
+      sphere3.position.x = -300;
+      sphere3.position.y = 500;
+      sphere3.position.z = 500;
+      sphere3.scale.set(10, 10, 10);
+      scene.add(sphere3);
+
+      //PIÑATA 5
+      const sphere4 = new THREE.Mesh(geometry2, material);
+      sphere4.position.x = 300;
+      sphere4.position.y = 500;
+      sphere4.position.z = -500;
+      sphere4.scale.set(10, 10, 10);
+      scene.add(sphere4);
+
+      //PIÑATA 6
+      const sphere5 = new THREE.Mesh(geometry2, material);
+      sphere5.position.x = -800;
+      sphere5.position.y = 500;
+      sphere5.position.z = 0;
+      sphere5.scale.set(10, 10, 10);
+      scene.add(sphere5);
+
+      //PIÑATA 6
+      const sphere6 = new THREE.Mesh(geometry2, material);
+      sphere6.position.x = 800;
+      sphere6.position.y = 500;
+      sphere6.position.z = 0;
+      sphere6.scale.set(10, 10, 10);
+      scene.add(sphere6);
 
       const radius = 5.1 * 15;
       const segments = 100;
@@ -166,8 +225,8 @@
       var update = function () {
         //se ejecuta cada frame, va checando los cambios
         //rotar el cubo
-        //cube.rotation.x += 0.01;
-        //cube.rotation.y += 0.01;
+        sphere.rotation.x += 0.01;
+        sphere.rotation.y += 0.01;
         /*var time = Date.now() * 0.0005;
         light1.position.x = Math.sin(time * 0.7) * 30;
         light1.position.y = Math.cos(time * 0.5) * 40;
