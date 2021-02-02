@@ -50,6 +50,14 @@
 
       //var controls = new OrbitControls(camara, renderer.domElement);
 
+      //quitar comentario para rotacion
+      //controls.autoRotate = true;
+
+
+      //controls.minDistance = 800;
+
+      //controls.maxPolarAngle = Math.PI / 3;
+
       //MODELO BIEN
       //scene.gltf es el puente
       var textureLoader = new THREE.TextureLoader();
@@ -226,6 +234,9 @@
         //rotar el cubo
         sphere.rotation.x += 0.01;
         sphere.rotation.y += 0.01;
+
+        //quitar comentario para activar rotacion alrededor del puente
+        //controls.update();
         /*var time = Date.now() * 0.0005;
         light1.position.x = Math.sin(time * 0.7) * 30;
         light1.position.y = Math.cos(time * 0.5) * 40;
