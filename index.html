@@ -18,44 +18,98 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r72/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/build/three.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
     <script src="js/ObjectLoader.js"></script>
     <script type="module">
       import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+      import {Curves} from "./CurveExtras.js";
 
+      /*
+      ---------------------------------------------------------------
+      CONSTANTES Y PARAMETROS
+      ---------------------------------------------------------------
+      */
+            
+      const direction = new THREE.Vector3();
+			const binormal = new THREE.Vector3();
+			const normal = new THREE.Vector3();
+			const position = new THREE.Vector3();
+      const lookAt = new THREE.Vector3();
+
+      const params = {
+				spline: 'Ellipse',
+				scale: 5,
+				extrusionSegments: 100,
+				radiusSegments: 3,
+				closed: true,
+				animationView: false,
+				lookAhead: false,
+				cameraHelper: false,
+      };
+
+      //Llama a función de curva paramétrica de elipse
+			const splines = {
+        Ellipse: new Curves.Ellipse(3.5)
+      };
+      
+      var spline = splines['Ellipse'];
+
+      /*
+      ---------------------------------------------------------------
+      ESCENA Y FONDO
+      ---------------------------------------------------------------
+      */
+
+      //Escena
       var scene = new THREE.Scene();
-      var petalos = new THREE.Geometry();
-      //scene.background = new THREE.Color(0xdddddd);
-      var camara = new THREE.PerspectiveCamera(
+      let parent = new THREE.Object3D();
+			scene.add( parent );
+
+      //Cambiar tamaño de acuerdo a la ventana.
+      window.addEventListener("resize", function () {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        renderer.setSize(width, height);
+      });
+
+      //Render
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      
+      //Camara
+      var splineCamera = new THREE.PerspectiveCamera(
         40,
         window.innerWidth / window.innerHeight,
         1,
         5000
       );
-      camara.rotation.y = (45 / 180) * Math.PI;
-      camara.position.x = 800;
-      camara.position.y = 100;
-      camara.position.z = 1000;
-      var renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+      parent.add( splineCamera );
+      
+      var cameraHelper = new THREE.CameraHelper( splineCamera );
+      scene.add( cameraHelper );
+      cameraHelper.visible = false;
 
+      //Elipse Cámara
+      const extrudePath = splines[ params.spline ];
+      const tubeGeometry = new THREE.TubeGeometry( extrudePath, params.extrusionSegments, 2, params.radiusSegments, params.closed );
+      const m = new THREE.MeshLambertMaterial( { color: 0xff00ff, transparent:true } );
+      
+      const tube = new THREE.Mesh( tubeGeometry, m );
+      tube.scale.set( params.scale, params.scale, params.scale );
+      tube.material.opacity = 0;
+      parent.add(tube);
+
+      let cameraEye = new THREE.Mesh( new THREE.SphereGeometry( 20 ), new THREE.MeshBasicMaterial( { color: 0x000000 } ) );
+      parent.add( cameraEye );
+
+      //Fondo
       var loader = new THREE.TextureLoader();
       loader.load("img/images.jpeg", function (texture) {
         scene.background = texture;
       });
 
-      //que todo cambie de acuerdo al tamaño
-      window.addEventListener("resize", function () {
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-        renderer.setSize(width, height);
-        camara.aspect = width / height;
-        camara.updateProjectionMatrix();
-      });
-
-      var controls = new OrbitControls(camara, renderer.domElement);
-
-      ////PISO
+      //Piso
       const groundTexture = new THREE.TextureLoader().load("img/ground.jpg");
       groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
       groundTexture.repeat.set(25, 25);
@@ -66,19 +120,24 @@
         map: groundTexture,
       });
 
-      let mesh = new THREE.Mesh(
+      let piso = new THREE.Mesh(
         new THREE.PlaneGeometry(20000, 20000),
         groundMaterial
       );
-      mesh.position.y = -250;
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.receiveShadow = true;
-      scene.add(mesh);
+      piso.position.y = -250;
+      piso.rotation.x = -Math.PI / 2;
+      piso.receiveShadow = true;
+      scene.add(piso);
 
-      //////////////////////////////////////
-      /////PETALOS-PARTICULAS//////////////
-      /////////////////////////////////////
+      /*
+      ---------------------------------------------------------------
+      Objetos
+      ---------------------------------------------------------------
+      */
 
+      //Pétalos
+
+      var petalos = new THREE.Geometry();
       var petalosCount = 100;
       var particleMaterial = new THREE.PointsMaterial({
         color: 0xffffff,
@@ -98,15 +157,9 @@
 
       var petalosSystem = new THREE.Points(petalos, particleMaterial);
       scene.add(petalosSystem);
-      console.log("holaaa");
-      //DELTA TIM ¿?
 
-      //var clock = new THREE.Clock(true);
-      //var deltaTime = clock.getDelta();
       function animatePetalos() {
-        console.log("animation");
         petalos.vertices.forEach((p) => {
-          console.log(p);
           p.velocity.y -= 0.001 + Math.random() * 0.001;
           p.y += p.velocity.y;
           if (p.y < -1000) {
@@ -118,8 +171,7 @@
         petalosSystem.rotation.y += 0.002;
       }
 
-      //MODELO BIEN
-      //scene.gltf es el puente
+      //Puente
       var textureLoader = new THREE.TextureLoader();
 
       var loader = new THREE.GLTFLoader();
@@ -199,7 +251,7 @@
       sphere6.scale.set(10, 10, 10);
       scene.add(sphere6);
 
-      //LIGHT
+      //Luces
       var ambientLight = new THREE.AmbientLight(0xffffff, 1);
       scene.add(ambientLight);
 
@@ -207,23 +259,75 @@
       var deltaTime;
       var time = 0;
 
+      /*
+      ---------------------------------------------------------------
+      Funciones
+      ---------------------------------------------------------------
+      */
+
+      /**
+       * Revisa y actualiza los cambios por frame
+       */
       var update = function () {
         //se ejecuta cada frame, va checando los cambios
+
         //rotar el cubo
         deltaTime = clock.getDelta();
         time += deltaTime;
         sphere.rotation.y += 0.01;
       };
 
-      var render = function () {
-        //todo lo que dibujas
-        //animatePetalos();
-        renderer.render(scene, camara);
+      /**
+       * Renderiza todo lo que se dibuja
+       */
+      function render () {
+
+        const time = Date.now();
+				const looptime = 30 * 1000;
+				const t = ( time % looptime ) / looptime;
+
+				tubeGeometry.parameters.path.getPointAt( t, position );
+        position.multiplyScalar( params.scale );
+
+				// interpolacion
+
+				const segments = tubeGeometry.tangents.length;
+				const pickt = t * segments;
+				const pick = Math.floor( pickt );
+				const pickNext = ( pick + 1 ) % segments;
+
+				binormal.subVectors( tubeGeometry.binormals[ pickNext ], tubeGeometry.binormals[ pick ] );
+				binormal.multiplyScalar( pickt - pick ).add( tubeGeometry.binormals[ pick ] );
+
+				tubeGeometry.parameters.path.getTangentAt( t, direction );
+				const offset = 15;
+
+				normal.copy( binormal ).cross( direction );
+				position.add( normal.clone().multiplyScalar( offset ) );
+
+        //Movimiento de la cámara
+				splineCamera.position.copy( position) ;
+        cameraEye.position.copy( position) ;
+
+				// Estabilización de la cámara
+
+				tubeGeometry.parameters.path.getPointAt( ( t + 30 / tubeGeometry.parameters.path.getLength() ) % 1, lookAt );
+        lookAt.multiplyScalar( params.scale );
+
+        //Visualización hacia al frente de la cámara
+        splineCamera.matrix.lookAt( splineCamera.position, lookAt, tube.up );
+        splineCamera.quaternion.setFromRotationMatrix( splineCamera.matrix );
+        splineCamera.up.set( 1, 1, 1 );
+
+        cameraHelper.update();
+        
+        renderer.render(scene, splineCamera);
       };
 
-      //run game loop : update, render, repeat
+      /**
+       * Corre la animación
+       */
       var GameLoop = function () {
-        //game dev construct, how the game will be flowing, re render stuff
         animatePetalos();
         requestAnimationFrame(GameLoop);
         update();
