@@ -16,9 +16,39 @@
   <body>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/build/three.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
     <script src="js/ObjectLoader.js"></script>
     <script type="module">
       import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
+      import {Curves} from "./CurveExtras.js";
+
+            // Keep a dictionary of Curve instances
+            
+      const direction = new THREE.Vector3();
+			const binormal = new THREE.Vector3();
+			const normal = new THREE.Vector3();
+			const position = new THREE.Vector3();
+			const lookAt = new THREE.Vector3();
+
+			const splines = {
+				GrannyKnot: new Curves.GrannyKnot(),
+				HeartCurve: new Curves.HeartCurve( 3.5 ),
+				VivianiCurve: new Curves.VivianiCurve( 70 ),
+				KnotCurve: new Curves.KnotCurve(),
+				HelixCurve: new Curves.HelixCurve(),
+				TrefoilKnot: new Curves.TrefoilKnot(),
+				TorusKnot: new Curves.TorusKnot( 20 ),
+				CinquefoilKnot: new Curves.CinquefoilKnot( 20 ),
+				TrefoilPolynomialKnot: new Curves.TrefoilPolynomialKnot( 14 ),
+				FigureEightPolynomialKnot: new Curves.FigureEightPolynomialKnot(),
+				DecoratedTorusKnot4a: new Curves.DecoratedTorusKnot4a(),
+				DecoratedTorusKnot4b: new Curves.DecoratedTorusKnot4b(),
+				DecoratedTorusKnot5a: new Curves.DecoratedTorusKnot5a(),
+				DecoratedTorusKnot5c: new Curves.DecoratedTorusKnot5c(),
+        Ellipse: new Curves.Ellipse(3.5)
+      };
+      
+      var spline = splines['Ellipse'];
 
       var scene = new THREE.Scene();
       scene.background = new THREE.Color(0xdddddd);
@@ -39,6 +69,9 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
+      let parent = new THREE.Object3D();
+			scene.add( parent );
+
       //que todo cambie de acuerdo al tamaño
       window.addEventListener("resize", function () {
         var width = window.innerWidth;
@@ -48,7 +81,7 @@
         camara.updateProjectionMatrix();
       });
 
-      //var controls = new OrbitControls(camara, renderer.domElement);
+      var controls = new OrbitControls(camara, renderer.domElement);
 
       //quitar comentario para rotacion
       //controls.autoRotate = true;
@@ -229,6 +262,53 @@
       spotLight.position.set(0, 3, 0);
       scene.add(spotLight);*/
 
+      //camara para tubo
+
+      var splineCamera = new THREE.PerspectiveCamera(
+        40,
+        window.innerWidth / window.innerHeight,
+        1,
+        5000
+      );
+      parent.add( splineCamera );
+      
+      var cameraHelper = new THREE.CameraHelper( splineCamera );
+      scene.add( cameraHelper );
+      cameraHelper.visible = false;
+      
+      
+
+
+      //params tubo
+
+      const params = {
+				spline: 'Ellipse',
+				scale: 5,
+				extrusionSegments: 100,
+				radiusSegments: 3,
+				closed: true,
+				animationView: false,
+				lookAhead: false,
+				cameraHelper: false,
+      };
+      
+
+      //Add tubo
+      const extrudePath = splines[ params.spline ];
+
+				const tubeGeometry = new THREE.TubeGeometry( extrudePath, params.extrusionSegments, 2, params.radiusSegments, params.closed );
+
+        const m = new THREE.MeshLambertMaterial( { color: 0xff00ff, transparent:true } );
+        
+        const mesh = new THREE.Mesh( tubeGeometry, m );
+        mesh.scale.set( params.scale, params.scale, params.scale );
+        mesh.material.opacity = 0;
+        parent.add(mesh);
+
+      
+
+      let cameraEye = new THREE.Mesh( new THREE.SphereGeometry( 20 ), new THREE.MeshBasicMaterial( { color: 0x000000 } ) );
+			parent.add( cameraEye );
       var update = function () {
         //se ejecuta cada frame, va checando los cambios
         //rotar el cubo
@@ -249,9 +329,50 @@
         light3.position.z = Math.sin(time * 0.5) * 30;*/
       };
 
-      var render = function () {
+      function render () {
         //todo lo que dibujas
-        renderer.render(scene, camara);
+
+        const time = Date.now();
+				const looptime = 30 * 1000;
+				const t = ( time % looptime ) / looptime;
+
+				tubeGeometry.parameters.path.getPointAt( t, position );
+        position.multiplyScalar( params.scale );
+
+				// interpolation
+
+				const segments = tubeGeometry.tangents.length;
+				const pickt = t * segments;
+				const pick = Math.floor( pickt );
+				const pickNext = ( pick + 1 ) % segments;
+
+				binormal.subVectors( tubeGeometry.binormals[ pickNext ], tubeGeometry.binormals[ pick ] );
+				binormal.multiplyScalar( pickt - pick ).add( tubeGeometry.binormals[ pick ] );
+
+				tubeGeometry.parameters.path.getTangentAt( t, direction );
+				const offset = 15;
+
+				normal.copy( binormal ).cross( direction );
+
+				// we move on a offset on its binormal
+
+				position.add( normal.clone().multiplyScalar( offset ) );
+
+				splineCamera.position.copy( position) ;
+        cameraEye.position.copy( position) ;
+
+				// using arclength for stablization in look ahead
+
+				tubeGeometry.parameters.path.getPointAt( ( t + 30 / tubeGeometry.parameters.path.getLength() ) % 1, lookAt );
+        lookAt.multiplyScalar( params.scale );
+
+        splineCamera.matrix.lookAt( splineCamera.position, lookAt, mesh.up );
+        splineCamera.quaternion.setFromRotationMatrix( splineCamera.matrix );
+        splineCamera.up.set( 1, 1, 1 );
+
+        cameraHelper.update();
+        
+        renderer.render(scene, splineCamera);
       };
 
       //run game loop : update, render, repeat
