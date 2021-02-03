@@ -24,3 +24,7 @@ forma para ver como funcionan.
 # Video Muestra - Segunda Entrega (29/Enero/2021)
 
 https://youtu.be/pgLwyjt2LEY
+
+# Tercera entrega -  2 Febrero del 2021
+
+Se agregaron texturas a todos los elementos, también se agregaron los pétalos
