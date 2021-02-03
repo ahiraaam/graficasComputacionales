@@ -14,6 +14,8 @@
     </style>
   </head>
   <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r72/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/build/three.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/examples/js/loaders/GLTFLoader.js"></script>
     <script src="js/ObjectLoader.js"></script>
@@ -21,7 +23,8 @@
       import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
 
       var scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xdddddd);
+      var petalos = new THREE.Geometry();
+      //scene.background = new THREE.Color(0xdddddd);
       var camara = new THREE.PerspectiveCamera(
         40,
         window.innerWidth / window.innerHeight,
@@ -36,6 +39,11 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
+      var loader = new THREE.TextureLoader();
+      loader.load("img/images.jpeg", function (texture) {
+        scene.background = texture;
+      });
+
       //que todo cambie de acuerdo al tamaño
       window.addEventListener("resize", function () {
         var width = window.innerWidth;
@@ -47,12 +55,75 @@
 
       var controls = new OrbitControls(camara, renderer.domElement);
 
+      ////PISO
+      const groundTexture = new THREE.TextureLoader().load("img/ground.jpg");
+      groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+      groundTexture.repeat.set(25, 25);
+      groundTexture.anisotropy = 16;
+      groundTexture.encoding = THREE.sRGBEncoding;
+
+      const groundMaterial = new THREE.MeshLambertMaterial({
+        map: groundTexture,
+      });
+
+      let mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(20000, 20000),
+        groundMaterial
+      );
+      mesh.position.y = -250;
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      //////////////////////////////////////
+      /////PETALOS-PARTICULAS//////////////
+      /////////////////////////////////////
+
+      var petalosCount = 100;
+      var particleMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 50,
+        map: THREE.ImageUtils.loadTexture("img/petalo.png"),
+        transparent: true,
+      });
+
+      for (var i = 0; i < petalosCount; i++) {
+        var pX = Math.random() * 2000 - 1000;
+        var pY = Math.random() * 2000 - 1000;
+        var pZ = Math.random() * 2000 - 1000;
+        var particle = new THREE.Vector3(pX, pY, pZ);
+        particle.velocity = new THREE.Vector3(0, -Math.random(), 0);
+        petalos.vertices.push(particle);
+      }
+
+      var petalosSystem = new THREE.Points(petalos, particleMaterial);
+      scene.add(petalosSystem);
+      console.log("holaaa");
+      //DELTA TIM ¿?
+
+      //var clock = new THREE.Clock(true);
+      //var deltaTime = clock.getDelta();
+      function animatePetalos() {
+        console.log("animation");
+        petalos.vertices.forEach((p) => {
+          console.log(p);
+          p.velocity.y -= 0.001 + Math.random() * 0.001;
+          p.y += p.velocity.y;
+          if (p.y < -1000) {
+            p.y = 1000;
+            p.velocity.y = 0;
+          }
+        });
+        petalos.verticesNeedUpdate = true;
+        petalosSystem.rotation.y += 0.002;
+      }
+
       //MODELO BIEN
       //scene.gltf es el puente
       var textureLoader = new THREE.TextureLoader();
 
       var loader = new THREE.GLTFLoader();
-      var newTexture = textureLoader.load("./img/pinata2.jpg");
+      var newTexture = textureLoader.load("./img/Flor2.jpg");
       loader.load("./models/scene.gltf", function (gltf) {
         var puente = gltf.scene.children[0];
         var newMaterial = new THREE.MeshStandardMaterial({ color: 0xff0080 });
@@ -68,65 +139,22 @@
         scene.add(gltf.scene);
       });
 
-      //Modelo
-      /*var loader = new THREE.ObjectLoader();
-      loader.load("models/bridge.json", function (object) {
-        scene.add(object);
-      });*/
-      //Create a shape
-      var geometry = new THREE.BoxGeometry(1, 1, 1);
-      //crear materiales
-      var cubeMaterials = [
-        new THREE.MeshLambertMaterial({
-          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
-          side: THREE.DoubleSide,
-        }), //RIGHT SIDE
-        new THREE.MeshPhongMaterial({
-          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
-          side: THREE.DoubleSide,
-        }), //LEFT SIDE
-        new THREE.MeshLambertMaterial({
-          map: new THREE.TextureLoader().load("img/pinata4.jpg"),
-          side: THREE.DoubleSide,
-        }), //TOP SIDE
-        new THREE.MeshPhongMaterial({
-          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
-          side: THREE.DoubleSide,
-        }), //BOTTOM SIDE
-        new THREE.MeshLambertMaterial({
-          map: new THREE.TextureLoader().load("img/pinata2.jpg"),
-          side: THREE.DoubleSide,
-        }), // BACK SIDE
-        new THREE.MeshPhongMaterial({
-          map: new THREE.TextureLoader().load("img/pinata4.jpg"),
-          side: THREE.DoubleSide,
-        }),
-      ];
-
-      //create a material, colour or image texture
-      var material = new THREE.MeshFaceMaterial(cubeMaterials);
-      /*var material = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        wireframe: true,
-      });*/
-      var cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
       //PIÑATA 1
       const geometry2 = new THREE.SphereGeometry(5, 32, 32);
       var material = new THREE.MeshLambertMaterial({
-        map: new THREE.TextureLoader().load("img/pinata4.jpg"),
+        map: new THREE.TextureLoader().load("img/pinata3.jpeg"),
         side: THREE.DoubleSide,
       });
       const sphere = new THREE.Mesh(geometry2, material);
       sphere.position.x = 10;
-      sphere.position.y = 500;
+      sphere.position.y = 400;
       sphere.scale.set(10, 10, 10);
       scene.add(sphere);
 
       //PIÑATA 2
       const sphere1 = new THREE.Mesh(geometry2, material);
       sphere1.position.x = 300;
-      sphere1.position.y = 500;
+      sphere1.position.y = 400;
       sphere1.position.z = 500;
       sphere1.scale.set(10, 10, 10);
       scene.add(sphere1);
@@ -134,7 +162,7 @@
       //PIÑATA 3
       const sphere2 = new THREE.Mesh(geometry2, material);
       sphere2.position.x = -300;
-      sphere2.position.y = 500;
+      sphere2.position.y = 400;
       sphere2.position.z = -500;
       sphere2.scale.set(10, 10, 10);
       scene.add(sphere2);
@@ -142,7 +170,7 @@
       //PIÑATA 4
       const sphere3 = new THREE.Mesh(geometry2, material);
       sphere3.position.x = -300;
-      sphere3.position.y = 500;
+      sphere3.position.y = 400;
       sphere3.position.z = 500;
       sphere3.scale.set(10, 10, 10);
       scene.add(sphere3);
@@ -150,7 +178,7 @@
       //PIÑATA 5
       const sphere4 = new THREE.Mesh(geometry2, material);
       sphere4.position.x = 300;
-      sphere4.position.y = 500;
+      sphere4.position.y = 400;
       sphere4.position.z = -500;
       sphere4.scale.set(10, 10, 10);
       scene.add(sphere4);
@@ -158,7 +186,7 @@
       //PIÑATA 6
       const sphere5 = new THREE.Mesh(geometry2, material);
       sphere5.position.x = -800;
-      sphere5.position.y = 500;
+      sphere5.position.y = 400;
       sphere5.position.z = 0;
       sphere5.scale.set(10, 10, 10);
       scene.add(sphere5);
@@ -166,90 +194,40 @@
       //PIÑATA 6
       const sphere6 = new THREE.Mesh(geometry2, material);
       sphere6.position.x = 800;
-      sphere6.position.y = 500;
+      sphere6.position.y = 400;
       sphere6.position.z = 0;
       sphere6.scale.set(10, 10, 10);
       scene.add(sphere6);
 
-      const radius = 5.1 * 15;
-      const segments = 100;
-      const thetaStart = Math.PI * 1.2;
-      const thetaLength = Math.PI * 0.20;
-      const petalgeometry = new THREE.CircleBufferGeometry(
-      radius, segments, thetaStart, thetaLength);
-      const petalmaterial = new THREE.MeshBasicMaterial({color: "orange", wireframe:false});
-      const petal = new THREE.Mesh(petalgeometry, petalmaterial);
-      petal.position.x = petal.position.x + 500;
-      petal.position.y = petal.position.y +300;
-      scene.add(petal)
-
-      const petal2 = new THREE.Mesh(petalgeometry, petalmaterial);
-      const petal3 = new THREE.Mesh(petalgeometry, petalmaterial);
-      const petal4 = new THREE.Mesh(petalgeometry, petalmaterial);
-      const petal5 = new THREE.Mesh(petalgeometry, petalmaterial);
-      const petal6 = new THREE.Mesh(petalgeometry, petalmaterial);
-
-      petal2.position.set(petal.position.x-300,petal.position.y + 100,petal.position.z+200);
-      petal3.position.set(petal.position.x-600,petal.position.y - 50,petal.position.z-200);
-      petal4.position.set(petal.position.x-800,petal.position.y + 125,petal.position.z);
-      petal5.position.set(petal.position.x-750,petal.position.y -30,petal.position.z);
-      petal6.position.set(petal.position.x-950,petal.position.y + 80,petal.position.z);
-
-      scene.add(petal2);
-      scene.add(petal3);
-      scene.add(petal4);
-      scene.add(petal5);
-      scene.add(petal6);
-
+      sphere.on("click", function (ev) {
+        console.log("click");
+      });
       //LIGHT
       var ambientLight = new THREE.AmbientLight(0xffffff, 1);
       scene.add(ambientLight);
-      /*
-      var light1 = new THREE.PointLight(0xff0040, 3, 50);
-      scene.add(light1);
 
-      var light2 = new THREE.PointLight(0x0040ff, 2, 50);
-      scene.add(light2);
-
-      var light3 = new THREE.PointLight(0x80ff80, 3, 50);
-      scene.add(light3);
-
-      var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-      directionalLight.position.set(0, 1, 0);
-      scene.add(directionalLight);
-
-      var spotLight = new THREE.SpotLight(0xff45f6, 25);
-      spotLight.position.set(0, 3, 0);
-      scene.add(spotLight);*/
+      var clock = new THREE.Clock(true);
+      var deltaTime;
+      var time = 0;
 
       var update = function () {
         //se ejecuta cada frame, va checando los cambios
         //rotar el cubo
-        sphere.rotation.x += 0.01;
+        deltaTime = clock.getDelta();
+        time += deltaTime;
         sphere.rotation.y += 0.01;
-        /*var time = Date.now() * 0.0005;
-        light1.position.x = Math.sin(time * 0.7) * 30;
-        light1.position.y = Math.cos(time * 0.5) * 40;
-        light1.position.z = Math.cos(time * 0.3) * 30;
-
-        light2.position.x = Math.cos(time * 0.3) * 30;
-        light2.position.y = Math.sin(time * 0.5) * 40;
-        light2.position.z = Math.sin(time * 0.7) * 30;
-
-        light3.position.x = Math.sin(time * 0.7) * 30;
-        light3.position.y = Math.cos(time * 0.3) * 40;
-        light3.position.z = Math.sin(time * 0.5) * 30;*/
       };
 
       var render = function () {
         //todo lo que dibujas
+        //animatePetalos();
         renderer.render(scene, camara);
       };
 
       //run game loop : update, render, repeat
       var GameLoop = function () {
         //game dev construct, how the game will be flowing, re render stuff
-
+        animatePetalos();
         requestAnimationFrame(GameLoop);
         update();
         render();
