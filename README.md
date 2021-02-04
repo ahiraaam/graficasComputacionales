@@ -29,13 +29,15 @@ https://youtu.be/pgLwyjt2LEY
 
 Se agregaron texturas a todos los elementos, también se agregaron los pétalos
 
-# Entrega Final -  2 Febrero del 2021
+# Entrega Final -  3 Febrero del 2021
 
 Para poder correr el proyecto es necesario montar un servidor local por ello
 tenemos un video donde se muestra la funcionalidad completa
 
 - Video: https://youtu.be/jOeFfTuagCI
+- El pdf del proyecto se encuentra en el repositorio
+- Las fotografías de evidencia se encuentran en la carpeta fotos-evidencia
+- Las texturas se encuentran en la carpeta img
 
-El pdf se encuentra en el repositorio
 
 
