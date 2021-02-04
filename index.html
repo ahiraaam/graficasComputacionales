@@ -19,11 +19,21 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/build/three.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.115/examples/js/loaders/GLTFLoader.js"></script>
     <script src="js/ObjectLoader.js"></script>
+    <script src="js/threex.domevents.js"></script>
+
     <script type="module">
       import { OrbitControls } from "https://threejs.org/examples/jsm/controls/OrbitControls.js";
 
       var scene = new THREE.Scene();
       var petalos = new THREE.Geometry();
+      var active1 = false;
+      var active2 = false;
+      var active3 = false;
+      var active4 = false;
+      var active5 = false;
+      var active6 = false;
+      var active7 = false;
+
       //scene.background = new THREE.Color(0xdddddd);
       var camara = new THREE.PerspectiveCamera(
         40,
@@ -99,14 +109,11 @@
       var petalosSystem = new THREE.Points(petalos, particleMaterial);
       scene.add(petalosSystem);
       console.log("holaaa");
-      //DELTA TIM ¿?
 
       //var clock = new THREE.Clock(true);
       //var deltaTime = clock.getDelta();
       function animatePetalos() {
-        console.log("animation");
         petalos.vertices.forEach((p) => {
-          console.log(p);
           p.velocity.y -= 0.001 + Math.random() * 0.001;
           p.y += p.velocity.y;
           if (p.y < -1000) {
@@ -148,6 +155,7 @@
       const sphere = new THREE.Mesh(geometry2, material);
       sphere.position.x = 10;
       sphere.position.y = 400;
+      sphere.position.z = 0;
       sphere.scale.set(10, 10, 10);
       scene.add(sphere);
 
@@ -199,9 +207,6 @@
       sphere6.scale.set(10, 10, 10);
       scene.add(sphere6);
 
-      sphere.on("click", function (ev) {
-        console.log("click");
-      });
       //LIGHT
       var ambientLight = new THREE.AmbientLight(0xffffff, 1);
       scene.add(ambientLight);
@@ -209,13 +214,213 @@
       var clock = new THREE.Clock(true);
       var deltaTime;
       var time = 0;
+      //////////////////////////////////////////////////////////////////
+      ////////////////////////////******EXPLOSION*****//////////////////
+      //////////////////////////////////////////////////////////////////
+      var particleExplosionMaterial = new THREE.PointsMaterial({
+        size: 10,
+        map: THREE.ImageUtils.loadTexture("img/pinata3.jpeg"),
+      });
+      var explosiones1 = new THREE.Geometry();
+      var explosiones2 = new THREE.Geometry();
+      var explosiones3 = new THREE.Geometry();
+      var explosiones4 = new THREE.Geometry();
+      var explosiones5 = new THREE.Geometry();
+      var explosiones6 = new THREE.Geometry();
+      var explosiones7 = new THREE.Geometry();
 
+      //creamos particulas de explosion
+      function createExplosion(x, y, z, explosiones) {
+        var particulasExplosion = 800;
+        for (var i = 0; i < particulasExplosion; i++) {
+          var eX = x;
+          var eY = y;
+          var eZ = z;
+          var particleExp = new THREE.Vector3(eX, eY, eZ);
+          particleExp.velocity = new THREE.Vector3(
+            -Math.random(),
+            -Math.random(),
+            Math.random()
+          );
+          explosiones.vertices.push(particleExp);
+        }
+      }
+      createExplosion(
+        sphere.position.x,
+        sphere.position.y,
+        sphere.position.z,
+        explosiones1
+      );
+      createExplosion(
+        sphere1.position.x,
+        sphere1.position.y,
+        sphere1.position.z,
+        explosiones2
+      );
+      createExplosion(
+        sphere2.position.x,
+        sphere2.position.y,
+        sphere2.position.z,
+        explosiones3
+      );
+      createExplosion(
+        sphere3.position.x,
+        sphere3.position.y,
+        sphere3.position.z,
+        explosiones4
+      );
+      createExplosion(
+        sphere4.position.x,
+        sphere4.position.y,
+        sphere4.position.z,
+        explosiones5
+      );
+      createExplosion(
+        sphere5.position.x,
+        sphere5.position.y,
+        sphere5.position.z,
+        explosiones6
+      );
+      createExplosion(
+        sphere6.position.x,
+        sphere6.position.y,
+        sphere6.position.z,
+        explosiones7
+      );
+      var explosionSystem1 = new THREE.Points(
+        explosiones1,
+        particleExplosionMaterial
+      );
+      var explosionSystem2 = new THREE.Points(
+        explosiones2,
+        particleExplosionMaterial
+      );
+      var explosionSystem3 = new THREE.Points(
+        explosiones3,
+        particleExplosionMaterial
+      );
+      var explosionSystem4 = new THREE.Points(
+        explosiones4,
+        particleExplosionMaterial
+      );
+      var explosionSystem5 = new THREE.Points(
+        explosiones5,
+        particleExplosionMaterial
+      );
+      var explosionSystem6 = new THREE.Points(
+        explosiones6,
+        particleExplosionMaterial
+      );
+      var explosionSystem7 = new THREE.Points(
+        explosiones7,
+        particleExplosionMaterial
+      );
+      scene.add(explosionSystem1);
+      scene.add(explosionSystem2);
+      scene.add(explosionSystem3);
+      scene.add(explosionSystem4);
+      scene.add(explosionSystem5);
+      scene.add(explosionSystem6);
+      scene.add(explosionSystem7);
+
+      function animateExplosion(syst, petl, active) {
+        if (active == true) {
+          petl.vertices.forEach((p) => {
+            p.velocity.y += Math.random() * 0.01 - 0.01 / 2;
+            p.velocity.x += Math.random() * 0.01 - 0.01 / 2;
+            p.velocity.z += Math.random() * 0.01 - 0.01 / 2;
+            p.y += p.velocity.y;
+            p.x += p.velocity.x;
+            p.z += p.velocity.z;
+          });
+          petl.verticesNeedUpdate = true;
+        }
+      }
+      //EVENTS - CLICK OF PINATAS
+
+      var domEvents = new THREEx.DomEvents(camara, renderer.domElement);
+      domEvents.addEventListener(
+        sphere,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active1 = true;
+          scene.remove(sphere);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere1,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active2 = true;
+          scene.remove(sphere1);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere2,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active3 = true;
+          scene.remove(sphere2);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere3,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active4 = true;
+          scene.remove(sphere3);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere4,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active5 = true;
+          scene.remove(sphere4);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere5,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active6 = true;
+          scene.remove(sphere5);
+        },
+        false
+      );
+      domEvents.addEventListener(
+        sphere6,
+        "click",
+        function (event) {
+          console.log("you clicked on the mesh");
+          active7 = true;
+          scene.remove(sphere6);
+        },
+        false
+      );
       var update = function () {
         //se ejecuta cada frame, va checando los cambios
         //rotar el cubo
         deltaTime = clock.getDelta();
         time += deltaTime;
         sphere.rotation.y += 0.01;
+        sphere1.rotation.y += 0.01;
+        sphere2.rotation.y += 0.01;
+        sphere3.rotation.y += 0.01;
+        sphere4.rotation.y += 0.01;
+        sphere5.rotation.y += 0.01;
+        sphere6.rotation.y += 0.01;
       };
 
       var render = function () {
@@ -228,11 +433,18 @@
       var GameLoop = function () {
         //game dev construct, how the game will be flowing, re render stuff
         animatePetalos();
+        animateExplosion(explosionSystem1, explosiones1, active1);
+        animateExplosion(explosionSystem2, explosiones2, active2);
+        animateExplosion(explosionSystem3, explosiones3, active3);
+        animateExplosion(explosionSystem4, explosiones4, active4);
+        animateExplosion(explosionSystem5, explosiones5, active5);
+        animateExplosion(explosionSystem6, explosiones6, active6);
+        animateExplosion(explosionSystem7, explosiones7, active7);
+
         requestAnimationFrame(GameLoop);
         update();
         render();
       };
-
       GameLoop();
     </script>
   </body>
